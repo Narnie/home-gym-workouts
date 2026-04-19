@@ -94,6 +94,18 @@ h1{text-align:center;font-size:1.6rem;margin-bottom:.25rem;}
 .gen-btn{padding:.5rem 1.2rem;border-radius:9999px;font-size:.85rem;font-weight:600;border:1px solid #374151;background:linear-gradient(135deg,#1f2937,#374151);color:#d1d5db;cursor:pointer;transition:all .2s;}
 .gen-btn:hover{background:linear-gradient(135deg,#374151,#4b5563);border-color:#4b5563;transform:scale(1.05);}
 .gen-btn:active{transform:scale(0.98);}
+
+/* Timer */
+.timer-box{background:#1f2937;border:1px solid #374151;border-radius:1rem;padding:1rem;margin-bottom:1.5rem;}
+.timer-display{font-size:2.5rem;font-weight:700;text-align:center;margin-bottom:.75rem;font-variant-numeric:tabular-nums;color:#fff;}
+.timer-controls{display:flex;justify-content:center;gap:.5rem;margin-bottom:.75rem;}
+.timer-btn{padding:.4rem 1rem;border-radius:9999px;font-size:.75rem;font-weight:600;border:1px solid #374151;background:#374151;color:#d1d5db;cursor:pointer;transition:all .2s;}
+.timer-btn:hover{background:#4b5563;border-color:#4b5563;}
+.timer-btn.primary{background:linear-gradient(135deg,#3b82f6,#818cf8);border-color:#60a5fa;color:#fff;}
+.timer-btn.primary:hover{background:linear-gradient(135deg,#2563eb,#6366f1);}
+.timer-quick{display:flex;justify-content:center;gap:.5rem;}
+.timer-quick-btn{padding:.3rem .75rem;border-radius:9999px;font-size:.7rem;font-weight:600;border:1px solid #374151;background:#1f2937;color:#9ca3af;cursor:pointer;transition:all .2s;}
+.timer-quick-btn:hover{background:#374151;color:#d1d5db;}
 </style>
 </head>
 <body>
@@ -156,8 +168,90 @@ let activeCat = 0;
 let mode = "browse"; // "browse" | "workout"
 let flipped = {};    // "ci_i" -> bool
 let selected = {};   // "ci_i" -> bool
+let timerSeconds = 0;
+let timerInterval = null;
+let timerRunning = false;
 
 function selCount(){ return Object.values(selected).filter(Boolean).length; }
+
+// Timer functions
+function formatTime(seconds){
+  const mins = Math.floor(seconds/60);
+  const secs = seconds%60;
+  return `${mins}:${secs.toString().padStart(2,'0')}`;
+}
+
+function playMelody(){
+  const audioContext = new (window.AudioContext||window.webkitAudioContext)();
+
+  // Upbeat victory fanfare
+  const melody = [
+    {freq:523,dur:0.15}, // C
+    {freq:659,dur:0.15}, // E
+    {freq:784,dur:0.15}, // G
+    {freq:523,dur:0.15}, // C
+    {freq:659,dur:0.15}, // E
+    {freq:784,dur:0.15}, // G
+    {freq:1047,dur:0.4}, // C high
+    {freq:784,dur:0.2},  // G
+    {freq:1047,dur:0.6}  // C high
+  ];
+
+  let time = audioContext.currentTime;
+  melody.forEach(note=>{
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.type = 'square';
+    osc.frequency.value = note.freq;
+    gain.gain.setValueAtTime(0.12, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + note.dur);
+
+    osc.start(time);
+    osc.stop(time + note.dur);
+    time += note.dur + 0.02;
+  });
+}
+
+function startTimer(){
+  if(timerSeconds===0) return;
+  timerRunning = true;
+  timerInterval = setInterval(()=>{
+    timerSeconds--;
+    if(timerSeconds<=0){
+      timerSeconds=0;
+      timerRunning=false;
+      clearInterval(timerInterval);
+      playMelody();
+      setTimeout(playMelody,2000);
+    }
+    render();
+  },1000);
+  render();
+}
+
+function pauseTimer(){
+  timerRunning=false;
+  clearInterval(timerInterval);
+  render();
+}
+
+function resetTimer(){
+  timerRunning=false;
+  clearInterval(timerInterval);
+  timerSeconds=0;
+  render();
+}
+
+function addQuickTimer(seconds){
+  if(timerRunning){
+    pauseTimer();
+  }
+  timerSeconds+=seconds;
+  render();
+}
 
 function fisherYatesShuffle(arr){
   const array = [...arr];
@@ -292,6 +386,19 @@ function renderWorkout(app){
       <p style="font-size:.85rem;margin-top:.5rem;">Go to Browse and tap <strong style="color:#fff">+</strong> on any card</p>
     </div>`;
   } else {
+    // Timer
+    html += `<div class="timer-box">
+      <div class="timer-display">${formatTime(timerSeconds)}</div>
+      <div class="timer-controls">
+        ${timerRunning?`<button class="timer-btn primary" onclick="pauseTimer()">⏸ Pause</button>`:`<button class="timer-btn primary" onclick="startTimer()">▶ Start</button>`}
+        <button class="timer-btn" onclick="resetTimer()">↺ Reset</button>
+      </div>
+      <div class="timer-quick">
+        <button class="timer-quick-btn" onclick="addQuickTimer(10)">+10s</button>
+        <button class="timer-quick-btn" onclick="addQuickTimer(30)">+30s</button>
+        <button class="timer-quick-btn" onclick="addQuickTimer(60)">+1m</button>
+      </div>
+    </div>`;
     html += `<div class="workout-header">
       <span class="workout-count">${cards.length} exercise${cards.length!==1?"s":""}</span>
       <button class="clear-btn" onclick="clearAll()">Clear all</button>
