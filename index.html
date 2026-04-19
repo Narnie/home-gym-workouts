@@ -88,6 +88,12 @@ h1{text-align:center;font-size:1.6rem;margin-bottom:.25rem;}
 .empty{text-align:center;margin-top:4rem;color:#6b7280;}
 .empty-icon{font-size:3rem;margin-bottom:1rem;}
 .footer{text-align:center;color:#4b5563;font-size:.7rem;margin-top:2rem;}
+
+/* Generation buttons */
+.gen-row{display:flex;justify-content:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid #374151;}
+.gen-btn{padding:.5rem 1.2rem;border-radius:9999px;font-size:.85rem;font-weight:600;border:1px solid #374151;background:linear-gradient(135deg,#1f2937,#374151);color:#d1d5db;cursor:pointer;transition:all .2s;}
+.gen-btn:hover{background:linear-gradient(135deg,#374151,#4b5563);border-color:#4b5563;transform:scale(1.05);}
+.gen-btn:active{transform:scale(0.98);}
 </style>
 </head>
 <body>
@@ -153,6 +159,37 @@ let selected = {};   // "ci_i" -> bool
 
 function selCount(){ return Object.values(selected).filter(Boolean).length; }
 
+function fisherYatesShuffle(arr){
+  const array = [...arr];
+  for(let i=array.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+  return array;
+}
+
+function generateWorkout(minutes){
+  const targetCount = minutes===30?12:minutes===45?18:24;
+  const basePerCat = Math.floor(targetCount/4);
+  const remainder = targetCount%4;
+
+  selected={}; // Clear existing selections
+
+  for(let ci=0;ci<4;ci++){
+    const countForCategory = basePerCat+(ci<remainder?1:0);
+    const pool = Array.from({length:9},(_,i)=>i);
+    const shuffled = fisherYatesShuffle(pool);
+
+    for(let i=0;i<countForCategory;i++){
+      const exerciseIndex = shuffled[i];
+      const key = `${ci}_${exerciseIndex}`;
+      selected[key]=true;
+    }
+  }
+
+  render();
+}
+
 function render(){
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -169,6 +206,14 @@ function render(){
       My Workout${sc>0?`<span class="count-badge">${sc}</span>`:""}
     </button>
   </div>`;
+
+  if(mode==="browse"){
+    app.innerHTML += `<div class="gen-row">
+      <button class="gen-btn" onclick="generateWorkout(30)">🎲 30 min</button>
+      <button class="gen-btn" onclick="generateWorkout(45)">🎲 45 min</button>
+      <button class="gen-btn" onclick="generateWorkout(60)">🎲 60 min</button>
+    </div>`;
+  }
 
   if(mode==="browse") renderBrowse(app);
   else renderWorkout(app);
@@ -226,6 +271,18 @@ function renderWorkout(app){
     .filter(([,v])=>v)
     .map(([key])=>{ const [ci,i]=key.split("_"); return {ci:+ci,i:+i,ex:EX[+ci][+i]}; });
 
+  // Reorder cards in pattern: Arms(2), Legs(3), Core(1), Aerobic(0)
+  const grouped = {0:[],1:[],2:[],3:[]};
+  cards.forEach(card=>grouped[card.ci].push(card));
+  const pattern = [2,3,1,0];
+  const orderedCards = [];
+  let maxLen = Math.max(0,...Object.values(grouped).map(arr=>arr.length));
+  for(let i=0;i<maxLen;i++){
+    pattern.forEach(ci=>{
+      if(grouped[ci][i]) orderedCards.push(grouped[ci][i]);
+    });
+  }
+
   let html = `<div class="workout-wrap">`;
 
   if(cards.length===0){
@@ -239,7 +296,7 @@ function renderWorkout(app){
       <span class="workout-count">${cards.length} exercise${cards.length!==1?"s":""}</span>
       <button class="clear-btn" onclick="clearAll()">Clear all</button>
     </div>`;
-    cards.forEach(({ci,ex})=>{
+    orderedCards.forEach(({ci,ex})=>{
       const cat = CATS[ci];
       html += `<div class="workout-row c${ci}">
         <div style="flex:1;min-width:0;padding-right:.75rem;">
