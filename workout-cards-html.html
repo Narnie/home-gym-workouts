@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Workout Cards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#030712;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:1rem;}
+h1{text-align:center;font-size:1.6rem;margin-bottom:.25rem;}
+.subtitle{text-align:center;color:#9ca3af;font-size:.8rem;margin-bottom:1rem;}
+
+/* Mode buttons */
+.mode-row{display:flex;justify-content:center;gap:.75rem;margin-bottom:1.25rem;}
+.mode-btn{padding:.4rem 1.1rem;border-radius:9999px;font-size:.85rem;font-weight:600;border:1px solid #374151;background:#1f2937;color:#d1d5db;cursor:pointer;position:relative;transition:background .2s,color .2s;}
+.mode-btn.active{background:#fff;color:#111;border-color:#fff;}
+.count-badge{position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;border-radius:9999px;width:1.2rem;height:1.2rem;display:flex;align-items:center;justify-content:center;}
+
+/* Category tabs */
+.cat-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin-bottom:.75rem;}
+.cat-btn{padding:.35rem .85rem;border-radius:9999px;font-size:.8rem;font-weight:600;border:1px solid #374151;background:#1f2937;color:#d1d5db;cursor:pointer;transition:all .2s;}
+.cat-btn.active{border-color:transparent;color:#fff;}
+.cat-btn.active.c0{background:linear-gradient(135deg,#f97316,#fbbf24);}
+.cat-btn.active.c1{background:linear-gradient(135deg,#10b981,#2dd4bf);}
+.cat-btn.active.c2{background:linear-gradient(135deg,#3b82f6,#818cf8);}
+.cat-btn.active.c3{background:linear-gradient(135deg,#a855f7,#e879f9);}
+
+.note-pill{display:block;text-align:center;font-size:.72rem;font-weight:600;padding:.2rem .75rem;border-radius:9999px;margin-bottom:1.25rem;}
+.n0{background:#fff7ed;color:#9a3412;}
+.n1{background:#ecfdf5;color:#065f46;}
+.n2{background:#eff6ff;color:#1e3a8a;}
+.n3{background:#faf5ff;color:#581c87;}
+
+/* Cards grid */
+.grid{display:grid;gap:1rem;grid-template-columns:1fr;max-width:900px;margin:0 auto;}
+@media(min-width:580px){.grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:860px){.grid{grid-template-columns:1fr 1fr 1fr;}}
+
+/* Flip card */
+.card-wrap{height:200px;perspective:1000px;position:relative;}
+.card-inner{width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s ease;position:relative;cursor:pointer;}
+.card-inner.flipped{transform:rotateY(180deg);}
+.card-face{position:absolute;inset:0;border-radius:1rem;border:1px solid;backface-visibility:hidden;padding:1.1rem;display:flex;flex-direction:column;justify-content:space-between;}
+.card-back{background:#1f2937;border-color:#374151;transform:rotateY(180deg);}
+
+/* Front gradients & borders */
+.card-front.c0{background:linear-gradient(135deg,#f97316,#fbbf24);border-color:#fb923c;}
+.card-front.c1{background:linear-gradient(135deg,#10b981,#2dd4bf);border-color:#34d399;}
+.card-front.c2{background:linear-gradient(135deg,#3b82f6,#818cf8);border-color:#60a5fa;}
+.card-front.c3{background:linear-gradient(135deg,#a855f7,#e879f9);border-color:#c084fc;}
+
+/* Selected rings */
+.card-inner.sel.c0 .card-face{box-shadow:0 0 0 4px #fb923c;}
+.card-inner.sel.c1 .card-face{box-shadow:0 0 0 4px #34d399;}
+.card-inner.sel.c2 .card-face{box-shadow:0 0 0 4px #60a5fa;}
+.card-inner.sel.c3 .card-face{box-shadow:0 0 0 4px #c084fc;}
+
+.cat-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;opacity:.8;}
+.card-name{font-size:1.05rem;font-weight:700;margin-top:.2rem;line-height:1.2;}
+.reps-pill{background:rgba(255,255,255,.22);font-size:.68rem;font-weight:600;padding:.18rem .6rem;border-radius:9999px;}
+.flip-hint{font-size:.62rem;opacity:.55;}
+.card-desc{font-size:.78rem;color:#e5e7eb;line-height:1.45;}
+.back-reps{font-size:.68rem;font-weight:600;padding:.15rem .5rem;border-radius:9999px;}
+.form-link{font-size:.72rem;color:#60a5fa;text-decoration:underline;}
+
+/* + button */
+.sel-btn{position:absolute;top:.5rem;right:.5rem;z-index:10;width:1.75rem;height:1.75rem;border-radius:9999px;border:none;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.sel-btn.off{background:rgba(0,0,0,.35);color:#fff;}
+.sel-btn.on{background:#fff;color:#111;}
+
+/* Workout view */
+.workout-wrap{max-width:640px;margin:0 auto;}
+.workout-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.workout-count{color:#9ca3af;font-size:.85rem;}
+.clear-btn{font-size:.75rem;color:#f87171;border:1px solid #7f1d1d;padding:.2rem .75rem;border-radius:9999px;background:transparent;cursor:pointer;}
+.workout-row{border-radius:1rem;padding:.85rem 1rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem;}
+.workout-row.c0{background:linear-gradient(135deg,#f97316,#fbbf24);}
+.workout-row.c1{background:linear-gradient(135deg,#10b981,#2dd4bf);}
+.workout-row.c2{background:linear-gradient(135deg,#3b82f6,#818cf8);}
+.workout-row.c3{background:linear-gradient(135deg,#a855f7,#e879f9);}
+.w-cat{font-size:.7rem;opacity:.75;margin-bottom:.15rem;}
+.w-name{font-weight:700;font-size:.9rem;}
+.w-reps{font-size:.72rem;opacity:.75;margin-top:.1rem;}
+.w-form{font-size:.7rem;background:rgba(255,255,255,.2);color:#fff;padding:.2rem .6rem;border-radius:9999px;text-decoration:none;white-space:nowrap;}
+.summary-box{margin-top:1.5rem;padding:1rem;background:#1f2937;border-radius:1rem;border:1px solid #374151;}
+.summary-title{font-size:.7rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;}
+.tag-row{display:flex;flex-wrap:wrap;gap:.5rem;}
+.empty{text-align:center;margin-top:4rem;color:#6b7280;}
+.empty-icon{font-size:3rem;margin-bottom:1rem;}
+.footer{text-align:center;color:#4b5563;font-size:.7rem;margin-top:2rem;}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const CATS = [
+  { name:"Aerobic",       icon:"🏃", note:"Use between sets or as a warm-up", ci:0 },
+  { name:"Core",          icon:"🧲", note:"Stability & anti-rotation focus",   ci:1 },
+  { name:"Arms & Back",   icon:"💪", note:"Pull strength & shoulder stability",ci:2 },
+  { name:"Legs & Glutes", icon:"🦵", note:"Power, stability & injury prevention",ci:3 },
+];
+
+const EX = [
+  // Aerobic (ci=0)
+  [{name:"Jump Rope",                   reps:"30–60 sec",        desc:"Classic cardio — keep elbows tucked, wrists drive the rope. Great for rhythm and coordination.",                                         link:"https://www.youtube.com/watch?v=FJmRQ5iTXKE"},
+   {name:"Box Step-Ups (Fast Pace)",    reps:"30 sec each leg",  desc:"Use your bench. Alternate legs at a brisk pace for aerobic benefit without joint stress.",                                               link:"https://www.youtube.com/watch?v=dQqApCGd5Ss"},
+   {name:"Kettlebell Swing",            reps:"15–20 reps",       desc:"Hip-hinge power drill. Explosive and metabolic — great crossover for skiing and biking.",                                                link:"https://www.youtube.com/watch?v=YSxHifyI6s8"},
+   {name:"Jumping Jacks",               reps:"40–60 reps",       desc:"Simple, joint-friendly full-body warm-up. Elevates heart rate fast with zero equipment.",                                                link:"https://www.youtube.com/watch?v=c4DAnQ6DtF8"},
+   {name:"Lateral Band Walks",          reps:"15 each direction",desc:"Band around ankles, squat slightly, step side to side. Activates glutes and hip stabilisers — essential for skiing.",                   link:"https://www.youtube.com/watch?v=5FpKCCppFkI"},
+   {name:"Mountain Climbers",           reps:"30–45 sec",        desc:"Plank position, drive knees alternately toward chest. Builds aerobic capacity and core stability together.",                             link:"https://www.youtube.com/watch?v=nmwgirgXLYM"},
+   {name:"Fit Ball Wall Squat",         reps:"45–60 sec hold",   desc:"Ball between back and wall, squat to 90°. Add a hold at the bottom for ski endurance — zero spine load.",                               link:"https://www.youtube.com/watch?v=nBzOhxGvRkw"},
+   {name:"High Knees",                  reps:"30–45 sec",        desc:"Drive knees up to hip height in a running motion on the spot. Rapid warm-up that also builds hip flexor strength.",                     link:"https://www.youtube.com/watch?v=8opcQdC-V-U"},
+   {name:"Kettlebell Figure-8",         reps:"30 sec",           desc:"Pass kettlebell in a figure-8 between legs. Keeps the heart rate up whilst training grip, coordination, and hip mobility.",              link:"https://www.youtube.com/watch?v=8j1FkbpUe0Q"}],
+  // Core (ci=1)
+  [{name:"Dead Bug",                    reps:"10 each side",     desc:"Lie on back, extend opposite arm and leg whilst keeping lower back pressed to floor. Low-risk spine stabiliser.",                        link:"https://www.youtube.com/watch?v=4XLEnwUr1d8"},
+   {name:"Plank (Fit Ball)",            reps:"3 × 30–45 sec",    desc:"Forearms on fit ball, hold a straight body line. The instability dramatically increases core demand.",                                   link:"https://www.youtube.com/watch?v=B296mZDhrP4"},
+   {name:"Pallof Press (Band)",         reps:"10–12 each side",  desc:"Anti-rotation press with a band anchored to the side. Trains the core to resist twisting — key for biking and skiing.",                 link:"https://www.youtube.com/watch?v=AH_QZLm_0-s"},
+   {name:"Fit Ball Rollout",            reps:"10–12 reps",       desc:"Kneel, hands on ball, roll forward maintaining a rigid torso. One of the most effective anti-extension core moves.",                     link:"https://www.youtube.com/watch?v=d3wR-9VbJCY"},
+   {name:"Hollow Body Hold",            reps:"3 × 20–30 sec",    desc:"Lying on back, arms overhead, lift legs and shoulders slightly off floor. A gymnastics staple for deep core strength.",                  link:"https://www.youtube.com/watch?v=LlDNef_Ztsc"},
+   {name:"Side Plank with Hip Dip",     reps:"10–12 each side",  desc:"Side plank position, lower and raise hips. Targets obliques and lateral hip stabilisers — crucial for balance sports.",                  link:"https://www.youtube.com/watch?v=_6C8mfFJMkc"},
+   {name:"Bird Dog",                    reps:"10 each side",     desc:"On all fours, extend opposite arm and leg whilst keeping hips perfectly level. Builds lumbar stability and coordination.",                link:"https://www.youtube.com/watch?v=wiFNA3sqjCA"},
+   {name:"Fit Ball Pike",               reps:"3 × 8–10 reps",    desc:"Start in a press-up position with shins on the ball, pike hips up toward the ceiling. Demands serious core control.",                   link:"https://www.youtube.com/watch?v=DHy2IXQSsRM"},
+   {name:"Suitcase Carry (Kettlebell)", reps:"20m each side",    desc:"Hold one kettlebell at your side and walk slowly. The unilateral load forces the core to work hard against lateral bend.",               link:"https://www.youtube.com/watch?v=8pjQp_QQvXc"}],
+  // Arms & Back (ci=2)
+  [{name:"Dips (Bench Attachment)",         reps:"3 × 8–12 reps",  desc:"Controlled lowering is key — keep elbows tracking back, not flaring wide. Great for triceps and chest.",                            link:"https://www.youtube.com/watch?v=0326dy_-CzM"},
+   {name:"Band Pull-Apart",                 reps:"3 × 15–20 reps", desc:"Hold band at shoulder height, pull apart to a T. Reinforces posture and rear deltoid — vital for cyclists.",                        link:"https://www.youtube.com/watch?v=TpDNHxCJGok"},
+   {name:"Kettlebell Row (Single Arm)",     reps:"10–12 each side", desc:"Use bench for support. Drive elbow back, keep hips square. Excellent lat and mid-back builder.",                                    link:"https://www.youtube.com/watch?v=pYcpY20QaE8"},
+   {name:"Fit Ball Press-Up",              reps:"3 × 8–12 reps",   desc:"Hands on fit ball for an unstable press-up. Builds pressing strength and shoulder stabilisation simultaneously.",                    link:"https://www.youtube.com/watch?v=P1Bj5lFQefs"},
+   {name:"Kettlebell Halo",                reps:"8 each direction", desc:"Circle the kettlebell slowly around your head. Warms up shoulders, improves mobility and stability together.",                       link:"https://www.youtube.com/watch?v=b4XmAzbRPGo"},
+   {name:"Face Pull (Band)",               reps:"3 × 15 reps",     desc:"Anchor band at head height, pull toward face with elbows high. Counters rounded shoulders from cycling and desk work.",              link:"https://www.youtube.com/watch?v=rep-qVOkqgk"},
+   {name:"Kettlebell Press (Single Arm)",  reps:"3 × 8 each side", desc:"Press one kettlebell overhead from the rack position. Builds shoulder stability and highlights any left/right imbalances.",          link:"https://www.youtube.com/watch?v=1SB5gDrBOGM"},
+   {name:"Bench Dip (Feet on Fit Ball)",   reps:"3 × 8–10 reps",   desc:"Feet on fit ball, hands on bench behind you. The unstable feet increase the difficulty and add core engagement.",                   link:"https://www.youtube.com/watch?v=c3ZGl4pnLZs"},
+   {name:"Banded Bicep Curl",             reps:"3 × 12–15 reps",   desc:"Stand on the band and curl both handles up together. Simple and joint-friendly — a good finisher for arm sessions.",                link:"https://www.youtube.com/watch?v=KWBhJJKmFAE"}],
+  // Legs & Glutes (ci=3)
+  [{name:"Hip Thrust (Barbell)",            reps:"3 × 10–12 reps", desc:"Back on bench, bar over hips with padding. Drive through heels, squeeze at top. The gold standard glute builder.",                  link:"https://www.youtube.com/watch?v=xDmFkJxPzeM"},
+   {name:"Bulgarian Split Squat",           reps:"8–10 each leg",  desc:"Rear foot on bench, front foot forward. Loaded with kettlebells for single-leg strength critical for skiing and trails.",            link:"https://www.youtube.com/watch?v=2C-uNgKwPLE"},
+   {name:"Romanian Deadlift (Kettlebells)", reps:"3 × 10–12 reps", desc:"Hip hinge with soft knees, kettlebells tracking close to legs. Targets hamstrings and glutes — key for downhill sports.",           link:"https://www.youtube.com/watch?v=JCXUYuzwNrM"},
+   {name:"Fit Ball Hamstring Curl",         reps:"3 × 10–12 reps", desc:"Lie on back, heels on ball, lift hips and curl ball toward you. Isolated hamstring work with zero equipment stress.",               link:"https://www.youtube.com/watch?v=RmZejg8TNVE"},
+   {name:"Goblet Squat (Kettlebell)",       reps:"3 × 12–15 reps", desc:"Hold one kettlebell at chest, squat deep with an upright torso. Reinforces quad strength and squat mechanics safely.",             link:"https://www.youtube.com/watch?v=MxsFDJCzmjg"},
+   {name:"Banded Clamshell",               reps:"15–20 each side", desc:"Side-lying with band above knees, rotate top knee open keeping feet together. Activates glute med — essential for knee tracking.",  link:"https://www.youtube.com/watch?v=SFMEMQuOKRM"},
+   {name:"Step-Up with Knee Drive",        reps:"10 each leg",     desc:"Step up onto bench, drive opposite knee to hip height. Mimics the pedal stroke and builds single-leg power.",                      link:"https://www.youtube.com/watch?v=2wFRz8ZF0Fs"},
+   {name:"Banded Glute Bridge",            reps:"3 × 15 reps",     desc:"Lying on back, band above knees, drive hips up and hold. Lower load than hip thrust — great as a warm-up or finisher.",           link:"https://www.youtube.com/watch?v=OUgsJ8-Vi0E"},
+   {name:"Lateral Lunge (Kettlebell)",     reps:"10 each side",    desc:"Step wide to one side, sit into that hip, keep chest tall. Trains the frontal plane — the most neglected pattern for skiers.",     link:"https://www.youtube.com/watch?v=GUGddMJ-ZQM"}],
+];
+
+// State
+let activeCat = 0;
+let mode = "browse"; // "browse" | "workout"
+let flipped = {};    // "ci_i" -> bool
+let selected = {};   // "ci_i" -> bool
+
+function selCount(){ return Object.values(selected).filter(Boolean).length; }
+
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  // Header
+  app.innerHTML += `<h1>🏋️ Workout Cards</h1>
+  <p class="subtitle">${mode==="browse"?"Tap card to flip · + to add to workout":"Your selected workout"}</p>`;
+
+  // Mode row
+  const sc = selCount();
+  app.innerHTML += `<div class="mode-row">
+    <button class="mode-btn${mode==="browse"?" active":""}" onclick="setMode('browse')">Browse</button>
+    <button class="mode-btn${mode==="workout"?" active":""}" onclick="setMode('workout')" style="position:relative">
+      My Workout${sc>0?`<span class="count-badge">${sc}</span>`:""}
+    </button>
+  </div>`;
+
+  if(mode==="browse") renderBrowse(app);
+  else renderWorkout(app);
+}
+
+function renderBrowse(app){
+  // Cat tabs
+  let tabs = `<div class="cat-tabs">`;
+  CATS.forEach((c,i)=>{
+    tabs += `<button class="cat-btn c${i}${activeCat===i?" active":""}" onclick="setCat(${i})">${c.icon} ${c.name}</button>`;
+  });
+  tabs += `</div>`;
+  app.innerHTML += tabs;
+
+  const cat = CATS[activeCat];
+  app.innerHTML += `<span class="note-pill n${cat.ci}">${cat.note}</span>`;
+
+  // Grid
+  let grid = `<div class="grid">`;
+  EX[activeCat].forEach((ex,i)=>{
+    const key = `${activeCat}_${i}`;
+    const isSel = !!selected[key];
+    const isFlip = !!flipped[key];
+    grid += `
+    <div class="card-wrap">
+      <button class="sel-btn ${isSel?"on":"off"}" onclick="toggleSel('${key}',event)">${isSel?"✓":"+"}</button>
+      <div class="card-inner${isFlip?" flipped":""}${isSel?" sel":""} c${cat.ci}" onclick="toggleFlip('${key}')">
+        <div class="card-face card-front c${cat.ci}">
+          <div>
+            <div class="cat-label">${cat.name}</div>
+            <div class="card-name">${ex.name}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="reps-pill">${ex.reps}</span>
+            <span class="flip-hint">Tap to flip →</span>
+          </div>
+        </div>
+        <div class="card-face card-back">
+          <p class="card-desc">${ex.desc}</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="back-reps n${cat.ci}">${ex.reps}</span>
+            <a class="form-link" href="${ex.link}" target="_blank" onclick="event.stopPropagation()">▶ Form guide</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  grid += `</div>`;
+  app.innerHTML += grid;
+  app.innerHTML += `<p class="footer">9 cards per category · All low-risk · Equipment matched to your kit</p>`;
+}
+
+function renderWorkout(app){
+  const cards = Object.entries(selected)
+    .filter(([,v])=>v)
+    .map(([key])=>{ const [ci,i]=key.split("_"); return {ci:+ci,i:+i,ex:EX[+ci][+i]}; });
+
+  let html = `<div class="workout-wrap">`;
+
+  if(cards.length===0){
+    html += `<div class="empty">
+      <div class="empty-icon">📋</div>
+      <p style="font-size:1.1rem;font-weight:600;color:#d1d5db;">No cards selected yet</p>
+      <p style="font-size:.85rem;margin-top:.5rem;">Go to Browse and tap <strong style="color:#fff">+</strong> on any card</p>
+    </div>`;
+  } else {
+    html += `<div class="workout-header">
+      <span class="workout-count">${cards.length} exercise${cards.length!==1?"s":""}</span>
+      <button class="clear-btn" onclick="clearAll()">Clear all</button>
+    </div>`;
+    cards.forEach(({ci,ex})=>{
+      const cat = CATS[ci];
+      html += `<div class="workout-row c${ci}">
+        <div style="flex:1;min-width:0;padding-right:.75rem;">
+          <div class="w-cat">${cat.icon} ${cat.name}</div>
+          <div class="w-name">${ex.name}</div>
+          <div class="w-reps">${ex.reps}</div>
+        </div>
+        <a class="w-form" href="${ex.link}" target="_blank">▶ Form</a>
+      </div>`;
+    });
+
+    // Summary
+    const usedCats = [...new Set(cards.map(c=>c.ci))];
+    html += `<div class="summary-box">
+      <p class="summary-title">Categories in this workout</p>
+      <div class="tag-row">
+        ${usedCats.map(ci=>`<span class="note-pill n${ci}" style="margin:0;padding:.2rem .6rem;">${CATS[ci].icon} ${CATS[ci].name}</span>`).join("")}
+      </div>
+    </div>`;
+  }
+
+  html += `</div>`;
+  app.innerHTML += html;
+}
+
+// Actions
+function setCat(i){ activeCat=i; flipped={}; render(); }
+function setMode(m){ mode=m; render(); }
+function toggleFlip(key){ flipped[key]=!flipped[key]; render(); }
+function toggleSel(key,e){ e.stopPropagation(); selected[key]=!selected[key]; render(); }
+function clearAll(){ selected={}; render(); }
+
+render();
+</script>
+</body>
+</html>
