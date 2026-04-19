@@ -172,6 +172,15 @@ let timerSeconds = 0;
 let timerInterval = null;
 let timerRunning = false;
 
+// Create persistent AudioContext for browser compatibility
+let audioContext = null;
+function getAudioContext(){
+  if(!audioContext){
+    audioContext = new (window.AudioContext||window.webkitAudioContext)();
+  }
+  return audioContext;
+}
+
 function selCount(){ return Object.values(selected).filter(Boolean).length; }
 
 // Timer functions
@@ -182,7 +191,12 @@ function formatTime(seconds){
 }
 
 function playMelody(){
-  const audioContext = new (window.AudioContext||window.webkitAudioContext)();
+  const audioContext = getAudioContext();
+
+  // Resume audio context if suspended (required by browsers)
+  if(audioContext.state==='suspended'){
+    audioContext.resume();
+  }
 
   // Upbeat victory fanfare
   const melody = [
@@ -217,6 +231,13 @@ function playMelody(){
 
 function startTimer(){
   if(timerSeconds===0) return;
+
+  // Resume audio context on user interaction (required by browsers)
+  const ctx = getAudioContext();
+  if(ctx.state==='suspended'){
+    ctx.resume();
+  }
+
   timerRunning = true;
   timerInterval = setInterval(()=>{
     timerSeconds--;
@@ -246,6 +267,12 @@ function resetTimer(){
 }
 
 function addQuickTimer(seconds){
+  // Resume audio context on user interaction (required by browsers)
+  const ctx = getAudioContext();
+  if(ctx.state==='suspended'){
+    ctx.resume();
+  }
+
   if(timerRunning){
     pauseTimer();
   }
