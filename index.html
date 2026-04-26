@@ -450,7 +450,7 @@ function renderWorkout(app){
           <div class="w-name" style="${isFirstActive ? 'font-size:1.2rem;' : ''}">${ex.name}</div>
           <div class="w-reps" style="${isFirstActive ? 'font-size:0.9rem;' : ''}">${ex.reps}</div>
         </div>
-        ${isFirstActive ? `<button onclick="setCompleted('${key}')" style="padding:0.75rem 1.5rem; border-radius:9999px; border:none; background:#fff; font-weight:700; cursor:pointer;">Done</button>` : ''}
+        ${isFirstActive ? `<button onclick="setCompleted('${key}')" style="padding:0.75rem 1.5rem; border-radius:9999px; border:none; background:#fff; font-weight:700; cursor:pointer; margin-right:0.5rem;">Done</button>` : ''}
         ${!isFirstActive && !isCompleted ? '' : `<a class="w-form" href="${ex.link}" target="_blank">▶ Form</a>`}
       </div>`;
     });
