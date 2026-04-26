@@ -168,6 +168,7 @@ let activeCat = 0;
 let mode = "browse"; // "browse" | "workout"
 let flipped = {};    // "ci_i" -> bool
 let selected = {};   // "ci_i" -> bool
+let completed = {};  // "ci_i" -> bool
 let timerSeconds = 0;
 let timerInterval = null;
 let timerRunning = false;
@@ -430,15 +431,27 @@ function renderWorkout(app){
       <span class="workout-count">${cards.length} exercise${cards.length!==1?"s":""}</span>
       <button class="clear-btn" onclick="clearAll()">Clear all</button>
     </div>`;
-    orderedCards.forEach(({ci,ex})=>{
+    orderedCards.forEach(({ci,ex,i}, index)=>{
+      const key = `${ci}_${i}`;
+      const isCompleted = !!completed[key];
+      const isFirstActive = orderedCards.findIndex(c => !completed[`${c.ci}_${c.i}`]) === index;
       const cat = CATS[ci];
-      html += `<div class="workout-row c${ci}">
+
+      let rowStyle = `class="workout-row c${ci}"`;
+      if (isCompleted) {
+        rowStyle = `class="workout-row" style="background:#e5e5e5; opacity:0.6;"`;
+      } else if (isFirstActive) {
+        rowStyle = `class="workout-row c${ci}" style="transform:scale(1.1); margin-top:1rem; margin-bottom:1rem;"`;
+      }
+
+      html += `<div ${rowStyle}>
         <div style="flex:1;min-width:0;padding-right:.75rem;">
           <div class="w-cat">${cat.icon} ${cat.name}</div>
-          <div class="w-name">${ex.name}</div>
-          <div class="w-reps">${ex.reps}</div>
+          <div class="w-name" style="${isFirstActive ? 'font-size:1.2rem;' : ''}">${ex.name}</div>
+          <div class="w-reps" style="${isFirstActive ? 'font-size:0.9rem;' : ''}">${ex.reps}</div>
         </div>
-        <a class="w-form" href="${ex.link}" target="_blank">▶ Form</a>
+        ${isFirstActive ? `<button onclick="setCompleted('${key}')" style="padding:0.75rem 1.5rem; border-radius:9999px; border:none; background:#fff; font-weight:700; cursor:pointer;">Done</button>` : ''}
+        ${!isFirstActive && !isCompleted ? '' : `<a class="w-form" href="${ex.link}" target="_blank">▶ Form</a>`}
       </div>`;
     });
 
@@ -460,8 +473,9 @@ function renderWorkout(app){
 function setCat(i){ activeCat=i; flipped={}; render(); }
 function setMode(m){ mode=m; render(); }
 function toggleFlip(key){ flipped[key]=!flipped[key]; render(); }
-function toggleSel(key,e){ e.stopPropagation(); selected[key]=!selected[key]; render(); }
-function clearAll(){ selected={}; render(); }
+function toggleSel(key,e){ e.stopPropagation(); selected[key]=!selected[key]; completed[key]=false; render(); }
+function clearAll(){ selected={}; completed={}; render(); }
+function setCompleted(key){ completed[key]=true; render(); }
 
 render();
 </script>
